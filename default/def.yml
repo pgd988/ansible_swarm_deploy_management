@@ -1,0 +1,7 @@
+---
+- hosts: 
+  - linux_servers
+  sudo: yes
+  user: root
+  roles:
+   - present

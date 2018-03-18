@@ -1,0 +1,137 @@
+---
+- name: Sudo install
+  package: pkg=sudo state=installed
+#  user: root
+
+- name: Send sudo config Debinan
+  copy: 
+   src: roles/default/present/files/sudoers_deb_distr 
+   dest: /etc/sudoers
+   owner: root
+   group: root
+   mode: 0644
+  when: ansible_distribution == "Debian"
+
+- name: Send sudo config CentOS
+  copy: 
+   src: roles/default/present/files/sudoers_centos_distr 
+   dest: /etc/sudoers
+   owner: root
+   group: root
+   mode: 0644
+  when: ansible_distribution == "Ubuntu"  
+
+- name: Install SSH daemon
+  package: pkg=openssh-server state=installed
+ #   ignore_errors: yes
+  become: true 
+
+- name: Password auth switch off
+  lineinfile: 
+    path: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    insertafter: '^#PasswordAuthentication'
+    line: 'PasswordAuthentication yes' ## YES is 4 the tests only! Production config must be set to NO.
+    state: present
+    create: true
+
+- name: Root login switch off
+  lineinfile: 
+    path: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    insertafter: '^#PermitRootLogin'
+    line: 'PermitRootLogin prohibit-password' ## Disable root login by password auth
+    state: present
+    create: true
+
+- name: Starting SSH service on Ubuntu servers
+  service: name=ssh state=started
+  become: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Starting SSH service on CentOS servers
+  service: name=sshd state=started
+  become: true
+  when: ansible_distribution == "CentOS"
+
+- name: Install fail2ban daemon
+  package: pkg=fail2ban state=installed
+  become: true
+
+- name: Send the fail2ban config
+  copy: 
+   src: roles/default/present/files/jail.conf_distr 
+   dest: /etc/fail2ban/jail.conf
+   owner: root
+   group: root
+   mode: 0644
+  notify: 
+  - fail2ban reload
+
+- name: fail2ban starting check
+  service: name=fail2ban state=started
+
+- name: Install required Docker packets on CentOS
+  package: pkg={{ item }} state=installed
+  with_items:
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
+    - python-setuptools
+    - pip
+  when: ansible_distribution == "CentOS"
+
+- name: Install required Docker packets on Ubuntu
+  package: pkg={{ item }} state=installed
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+    - python-setuptools
+    - pip
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install docker-py
+  become: true
+  pip:
+    name: docker-py
+    extra_args: --ignore-installed
+
+
+- name: Add Docker repository under CentOS
+  yum_repository:
+   name: Docker_repo
+   baseurl: https://download.docker.com/linux/centos/docker-ce.repo
+   enabled: yes
+   state: present
+  when: ansible_distribution == "CentOS"
+
+- name: Add Docker.com key into Ubuntu
+  apt_key:
+   url: https://download.docker.com/linux/ubuntu/gpg
+   state: present
+  when: ansible_distribution == "Ubuntu"
+
+- name: Add repository into ubuntu
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+    state: present
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+
+name: Install docker-ce daemon
+  package: pkg=docker-ce state=installed
+  become: true
+  enabled: yes
+
+- name: Docker starting check
+  service: name=docker state=started
+
+- name: Additional App install
+  package: pkg={{ item }} state=installed 
+  with_items:
+    - vim
+    - wget
+    - curl
+    - git
