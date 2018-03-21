@@ -1,7 +1,8 @@
 ---
 - hosts: 
   - linux_servers
-  sudo: yes
+  bacome: true
   user: root
   roles:
-   - present
+   - default
+
