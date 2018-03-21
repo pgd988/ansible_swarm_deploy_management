@@ -1,11 +1,20 @@
 Run it for TEST from .  directory
 
-ansible-playbook --check LB.yml -i inventory --vault-password-file roles/LB/vars/vault_pass
+ansible-playbook --check [role].yml -i inventory --vault-password-file roles/LB/vars/vault_pass
 
 
 Run it for PROD from . directory
 
-ansible-playbook  LB.yml -i inventory --vault-password-file roles/LB/vars/vault_pass
+ansible-playbook  [role].yml -i inventory --vault-password-file roles/LB/vars/vault_pass
+
+
+################## Roles
+
+default - default user creation and software install
+
+LB - Load balancer installation with HAproxy
+
+swarm_manages - Doker swarm manager role
 
 
 ##################
