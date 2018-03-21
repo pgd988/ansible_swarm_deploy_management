@@ -1,0 +1,17 @@
+haproxy_backends:
+  - name: webservers
+    disabled: false
+    description: Joomla App Backends
+    balance: roundrobin
+    server:
+      - name: web1
+        ip: 192.168.10.1
+        port: 80
+        weight: 10
+        param: check
+      - name: web2
+        ip: 192.168.10.2
+        port: 80
+        weight: 20
+        param: check
+    option: httpchk

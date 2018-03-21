@@ -1,0 +1,33 @@
+---
+- name: fail2ban start
+  service: name=fail2ban state=started
+
+- name: fail2ban reload
+  service: name=fail2ban state=reloaded
+
+- name: Start Haproxy
+  service: name=haproxy state=started
+
+- name: Haproxy syntax check
+  command: haproxy -f /etc/haproxy/haproxy.cfg -c
+  register: haproxy_config_syntax
+  failed_when: "haproxy_config_syntax.stdout.find('Error(s)') != -1"
+
+- name: Haproxy conf fail msg
+  debug: msg="Haproxy config failed"
+  when: haproxy_config_syntax | failed
+
+- name: haproxy reload
+  service: name=haproxy state=reloaded
+#  when: haproxy_config_syntax | success
+  
+- name: Nagios NRPE agent restart
+  service: name=nagios-nrpe-server state=reloaded
+
+- name: NRPE agent start
+  service: name=nagios-nrpe-server state=started
+
+- name: Iptables reload
+  service: name=iptables state=reloaded
+  
+

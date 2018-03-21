@@ -1,0 +1,55 @@
+---
+- include_vars: roles/LB/vars/users_list.yaml
+
+- name: Change root password
+  user: name=root password={{ root_pass }}
+  become: yes
+
+- name: User creation with home dir, shell and groups adding
+  user: name={{ item.username }} shell=/bin/bash uid={{ item.uid }} createhome=yes password={{ random_pass }} comment="" state=present
+  with_items: '{{ users }}'
+  when: ( item.active == True )
+
+- name: Pub_key storage directory creation
+  file:
+    path: '/home/{{ item.username }}/.ssh'
+    state: directory
+    mode: 0700
+  state: present
+  with_items: '{{ users }}'
+  when: ( item.active == True )
+  
+
+- name: Auth key adding
+  authorized_key: user={{ item.username }}
+   key="{{ lookup('file', 'roles/LB/files/pub_keys/{{ item.username }}.pub') }}"
+  state: present
+  with_items: '{{ users }}'
+  when: ( item.active == True )
+
+- name: Old sudoers file remove
+  file:
+    path: roles/LB/files/10_admins_def
+    state: absent
+  delegate_to: localhost
+  no_log: True
+  
+- name: sudoers file generation
+  lineinfile:
+    path: roles/LB/files/10_admins_def
+    insertafter: 'EOF'
+    line: '%{{ item.username }} ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    create: True
+  delegate_to: localhost
+  with_items: '{{ users }}' 
+  when: ( item.use_sudo == True and item.active == True )
+
+- name: Send sudoers config
+  copy: 
+   src: roles/LB/files/10_admins_def
+   dest: /etc/sudoers.d/10_admins
+   owner: root
+   group: root
+   mode: 0644
+

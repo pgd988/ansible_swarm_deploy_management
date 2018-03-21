@@ -1,0 +1,13 @@
+---
+users:
+  - username: user_13
+    use_sudo: true
+    uid: 1519
+    active: True
+
+  - username: user_14
+    use_sudo: true
+    uid: 1520
+    active: False #Is set to False this user will be removed from remote server.
+
+random_pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
