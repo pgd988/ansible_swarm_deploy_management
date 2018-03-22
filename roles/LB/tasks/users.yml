@@ -1,10 +1,6 @@
 ---
 - include_vars: roles/LB/vars/users_list.yaml
 
-- name: Change root password
-  user: name=root password={{ root_pass }}
-  become: yes
-
 - name: User creation with home dir, shell and groups adding
   user: name={{ item.username }} shell=/bin/bash uid={{ item.uid }} createhome=yes password={{ random_pass }} comment="" state=present
   with_items: '{{ users }}'
@@ -19,7 +15,6 @@
   with_items: '{{ users }}'
   when: ( item.active == True )
   
-
 - name: Auth key adding
   authorized_key: user={{ item.username }}
    key="{{ lookup('file', 'roles/LB/files/pub_keys/{{ item.username }}.pub') }}"
@@ -29,14 +24,14 @@
 
 - name: Old sudoers file remove
   file:
-    path: roles/LB/files/10_admins_def
+    path: roles/LB/files/10_admins_LB
     state: absent
   delegate_to: localhost
   no_log: True
   
 - name: sudoers file generation
   lineinfile:
-    path: roles/LB/files/10_admins_def
+    path: roles/LB/files/20_admins_LB
     insertafter: 'EOF'
     line: '%{{ item.username }} ALL=(ALL) NOPASSWD: ALL'
     state: present
@@ -47,8 +42,8 @@
 
 - name: Send sudoers config
   copy: 
-   src: roles/LB/files/10_admins_def
-   dest: /etc/sudoers.d/10_admins
+   src: roles/LB/files/20_admins_LB
+   dest: /etc/sudoers.d/20_admins_LB
    owner: root
    group: root
    mode: 0644

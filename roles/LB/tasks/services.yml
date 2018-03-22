@@ -3,70 +3,17 @@
 - include_vars: roles/LB/vars/backends.yaml
 - include_vars: roles/LB/vars/root_pass.yml
 
-- name: Sudo install
-  package: pkg=sudo state=installed
-
-- name: Send sudo config Ubuntu
-  copy: 
-   src: roles/LB/files/sudoers_deb_distr 
-   dest: /etc/sudoers
-   owner: root
-   group: root
-   mode: 0644
-
-- name: Install SSH daemon
-  package: pkg=openssh-server state=installed
- #   ignore_errors: yes
-  become: true 
-
 - name: Iptables config deploy
   copy: src=iptables/iptables.rules dest=/etc/iptables.rules
   notify: Iptables reload
-
-- name: Password auth switch off
-  lineinfile: 
-    path: /etc/ssh/sshd_config
-    regexp: '^PasswordAuthentication'
-    insertafter: '^#PasswordAuthentication'
-    line: 'PasswordAuthentication yes' ## YES is 4 the tests only! Production config must be set to NO.
-    state: present
-    create: true
-
-- name: Root login switch off
-  lineinfile: 
-    path: /etc/ssh/sshd_config
-    regexp: '^PermitRootLogin'
-    insertafter: '^#PermitRootLogin'
-    line: 'PermitRootLogin prohibit-password' ## Disable root login by password auth
-    state: present
-    create: true
-
-- name: Starting SSH service on Ubuntu servers
-  service: name=ssh state=started
-  become: true
-
-- name: Install fail2ban daemon
-  package: pkg=fail2ban state=installed
-  become: true
-
-- name: Send the fail2ban config
-  copy: 
-   src: roles/LB/files/jail.conf_distr 
-   dest: /etc/fail2ban/jail.conf
-   owner: root
-   group: root
-   mode: 0644
-  notify: 
-  - fail2ban reload
-
-- name: fail2ban starting check
-  service: name=fail2ban state=started
 
 - name: NRPE agent install
   package: pkg={{ item }} state=installed 
   with_items:
     - nagios-nrpe-server
     - nagios-plugins
+  when: 
+    - monitoring_server.nagios == true
 
 - name: NRPE agent Allow server
   lineinfile: 
@@ -79,6 +26,25 @@
   with_items: '{{ nagios_master }}'
   notify:
     - Nagios NRPE agent restart
+   when: monitoring_server.nagios == true
+
+- name: Install a .deb package Zabbix repo
+  apt:
+    deb: http://repo.zabbix.com/zabbix/3.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.4-1+{{ansible_distribution_release}}_all.deb
+  when: 
+    - monitoring_server.zabbix == true
+    - ansible_distribution == "Ubuntu"
+
+- name: Install .rpm package Zabbix repo
+  yum:
+    name: http://repo.zabbix.com/zabbix/3.4/rhel/{{ansible_distribution_major_version}}/x86_64/zabbix-release-3.4-2.el7.noarch.rpm
+  when:
+    - monitoring_server.zabbix == true
+    - ansible_distribution == "CentOS"
+
+- name: Install Zabbix Agent
+    package: pkg=zabbix-agent state=installed
+  when: monitoring_server.zabbix == true
 
 - name: HaProxy install
   package: pkg=haproxy state=installed

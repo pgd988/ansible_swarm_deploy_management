@@ -1,7 +1,6 @@
 ---
 - name: Sudo install
   package: pkg=sudo state=installed
-#  user: root
 
 - name: Send sudo config Debinan
   copy: 
@@ -19,11 +18,10 @@
    owner: root
    group: root
    mode: 0644
-  when: ansible_distribution == "Ubuntu"  
+  when: ansible_distribution == "CentOS"  
 
 - name: Install SSH daemon
   package: pkg=openssh-server state=installed
- #   ignore_errors: yes
   become: true 
 
 - name: Password auth switch off
@@ -70,63 +68,6 @@
 
 - name: fail2ban starting check
   service: name=fail2ban state=started
-
-- name: Install required Docker packets on CentOS
-  package: pkg={{ item }} state=installed
-  with_items:
-    - yum-utils
-    - device-mapper-persistent-data
-    - lvm2
-    - python-setuptools
-    - pip
-  when: ansible_distribution == "CentOS"
-
-- name: Install required Docker packets on Ubuntu
-  package: pkg={{ item }} state=installed
-  with_items:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - software-properties-common
-    - python-setuptools
-    - pip
-  when: ansible_distribution == "Ubuntu"
-
-- name: Install docker-py
-  become: true
-  pip:
-    name: docker-py
-    extra_args: --ignore-installed
-
-
-- name: Add Docker repository under CentOS
-  yum_repository:
-   name: Docker_repo
-   baseurl: https://download.docker.com/linux/centos/docker-ce.repo
-   enabled: yes
-   state: present
-  when: ansible_distribution == "CentOS"
-
-- name: Add Docker.com key into Ubuntu
-  apt_key:
-   url: https://download.docker.com/linux/ubuntu/gpg
-   state: present
-  when: ansible_distribution == "Ubuntu"
-
-- name: Add repository into ubuntu
-  apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
-    state: present
-    update_cache: yes
-  when: ansible_distribution == "Ubuntu"
-
-name: Install docker-ce daemon
-  package: pkg=docker-ce state=installed
-  become: true
-  enabled: yes
-
-- name: Docker starting check
-  service: name=docker state=started
 
 - name: Additional App install
   package: pkg={{ item }} state=installed 

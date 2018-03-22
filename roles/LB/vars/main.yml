@@ -1,5 +1,12 @@
 ---
 
+monitoring_server:
+    - zabbix: true
+      nagios: false
+
 nagios_master:
+    - ip: 192.168.100.100
+
+zabbix_master:
     - ip: 192.168.100.100
 
