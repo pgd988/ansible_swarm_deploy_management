@@ -7,45 +7,6 @@
   copy: src=iptables/iptables.rules dest=/etc/iptables.rules
   notify: Iptables reload
 
-- name: NRPE agent install
-  package: pkg={{ item }} state=installed 
-  with_items:
-    - nagios-nrpe-server
-    - nagios-plugins
-  when: 
-    - monitoring_server.nagios == true
-
-- name: NRPE agent Allow server
-  lineinfile: 
-    path: /etc/nagios/nrpe.cfg 
-    regexp: '^allowed_hosts'
-    insertafter: '^#allowed_hosts'
-    line: 'allowed_hosts=127.0.0.1, {{ item.ip }}'
-    state: present
-    create: true
-  with_items: '{{ nagios_master }}'
-  notify:
-    - Nagios NRPE agent restart
-   when: monitoring_server.nagios == true
-
-- name: Install a .deb package Zabbix repo
-  apt:
-    deb: http://repo.zabbix.com/zabbix/3.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_3.4-1+{{ansible_distribution_release}}_all.deb
-  when: 
-    - monitoring_server.zabbix == true
-    - ansible_distribution == "Ubuntu"
-
-- name: Install .rpm package Zabbix repo
-  yum:
-    name: http://repo.zabbix.com/zabbix/3.4/rhel/{{ansible_distribution_major_version}}/x86_64/zabbix-release-3.4-2.el7.noarch.rpm
-  when:
-    - monitoring_server.zabbix == true
-    - ansible_distribution == "CentOS"
-
-- name: Install Zabbix Agent
-    package: pkg=zabbix-agent state=installed
-  when: monitoring_server.zabbix == true
-
 - name: HaProxy install
   package: pkg=haproxy state=installed
 
@@ -54,7 +15,7 @@
     path: "/etc/haproxy/backends.d"
     state: directory
 
-- name: 'Build up the backetnd'
+- name: Build up the backetnd
   template:
     src: "backend.cfg"
     dest: "/etc/haproxy/backends.d/{{ item.name }}.cfg"
@@ -64,7 +25,7 @@
 - name: Haproxy default config deploy
   copy: src=haproxy.cfg dest=/etc/haproxy/backends.d/haproxy.cfg_dist
 
-- name: 'Build Main Configuration file'
+- name: Build Main Configuration file
   assemble:
     src: "/etc/haproxy/backends.d"
     dest: "/etc/haproxy/haproxy.cfg"
