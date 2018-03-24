@@ -1,1 +1,4 @@
 ---
+
+tokennode: "{{ hostvars.manager.init_first_node.stdout.split('\n')[5].split(' ')[5] }}"
+hostmanager: "{{ hostvars.manager.init_first_node.stdout.split('\n')[6] }}"

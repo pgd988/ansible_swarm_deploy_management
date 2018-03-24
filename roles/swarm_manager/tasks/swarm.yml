@@ -5,10 +5,15 @@
   command: docker swarm leave -f 
   ignore_errors: yes
 
-
 - name: Swarm cluster Init
   become: yes
   command: docker swarm init --advertise-addr={{ swarm_iface | default ('eth0') }}:2377
   register: init_first_node
+
+- name: join nodes to manager
+  command: docker swarm join --token={{ tokennode }} {{ hostmanager }}
+  become: yes
+  register: swarm_join_result
+  failed_when: not "'This node is already part of a swarm' in command_result.stderr"
 
   

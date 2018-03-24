@@ -27,7 +27,6 @@
     name: docker-py
     extra_args: --ignore-installed
 
-
 - name: Add Docker repository under CentOS
   yum_repository:
    name: Docker_repo
