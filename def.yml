@@ -1,8 +1,8 @@
 ---
 - hosts: 
   - linux_servers
-  bacome: true
-  user: root
+  become: true
+  user: ubuntu
   roles:
    - default
 

@@ -1,14 +1,14 @@
 ---
-- include_vars: roles/default/present/vars/users_list.yaml
+- include_vars: roles/default/vars/users_list.yaml
 
 
 #- name: DEBUG 
 #  debug:
 #    msg: "Root Pwd is: {{ root_pass }} and Random Pwd is: {{ random_pass }}"
 
-- name: Change root password
-  user: name=root password={{ root_pass }}
-  sudo: yes
+#- name: Change root password
+#  user: name=root password={{ root_pass }}
+#  become: yes
 
 - name: User creation with home dir, shell and groups adding
   user: name={{ item.username }} shell=/bin/bash uid={{ item.uid }} createhome=yes password={{ random_pass }} comment="" state=present
@@ -27,21 +27,21 @@
 
 - name: Auth key adding
   authorized_key: user={{ item.username }}
-   key="{{ lookup('file', 'roles/default/present/files/pub_keys/{{ item.username }}.pub') }}"
+   key="{{ lookup('file', 'roles/default/files/pub_keys/{{ item.username }}.pub') }}"
   state: present
   with_items: '{{ users }}'
   when: ( item.active == True )
 
 - name: Old sudoers file remove
   file:
-    path: roles/default/present/files/10_admins_def
+    path: roles/default/files/10_admins_def
     state: absent
   delegate_to: localhost
   no_log: True
   
 - name: sudoers file generation
   lineinfile:
-    path: roles/default/present/files/10_admins_def
+    path: roles/default/files/10_admins_def
     insertafter: 'EOF'
     line: '%{{ item.username }} ALL=(ALL) NOPASSWD: ALL'
     state: present
@@ -52,7 +52,7 @@
 
 - name: Send sudoers config
   copy: 
-   src: roles/default/present/files/10_admins_def
+   src: roles/default/files/10_admins_def
    dest: /etc/sudoers.d/10_admins
    owner: root
    group: root

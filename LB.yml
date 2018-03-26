@@ -2,6 +2,6 @@
 - hosts:
   - lb
   become: true
-  user: root
+  user: ubuntu
   roles:
    - LB

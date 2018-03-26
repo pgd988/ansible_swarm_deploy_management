@@ -1,19 +1,22 @@
 ---
+
+#- include_vars: roles/default/vars/main.yaml
+
 - name: Sudo install
   package: pkg=sudo state=installed
 
-- name: Send sudo config Debinan
+- name: Send sudo config Ubuntu
   copy: 
-   src: roles/default/present/files/sudoers_deb_distr 
+   src: roles/default/files/sudoers_deb_distr 
    dest: /etc/sudoers
    owner: root
    group: root
    mode: 0644
-  when: ansible_distribution == "Debian"
+  when: ansible_distribution == "Ubuntu"
 
 - name: Send sudo config CentOS
   copy: 
-   src: roles/default/present/files/sudoers_centos_distr 
+   src: roles/default/files/sudoers_centos_distr 
    dest: /etc/sudoers
    owner: root
    group: root
@@ -58,7 +61,7 @@
 
 - name: Send the fail2ban config
   copy: 
-   src: roles/default/present/files/jail.conf_distr 
+   src: roles/default/files/jail.conf_distr 
    dest: /etc/fail2ban/jail.conf
    owner: root
    group: root
@@ -74,8 +77,7 @@
   with_items:
     - nagios-nrpe-server
     - nagios-plugins
-  when: 
-    - monitoring_server.nagios == true
+  when: (monitoring_server.nagios == true)
 
 - name: NRPE agent Allow server
   lineinfile: 
@@ -88,7 +90,7 @@
   with_items: '{{ nagios_master }}'
   notify:
     - Nagios NRPE agent restart
-   when: monitoring_server.nagios == true
+  when: monitoring_server.nagios == true
 
 - name: Install a .deb package Zabbix repo
   apt:
@@ -105,7 +107,7 @@
     - ansible_distribution == "CentOS"
 
 - name: Install Zabbix Agent
-    package: pkg=zabbix-agent state=installed
+  package: pkg=zabbix-agent state=installed
   when: monitoring_server.zabbix == true
 
 - name: Send Zabbix_agents config file 
