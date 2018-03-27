@@ -3,7 +3,7 @@ users:
   - username: user_13
     use_sudo: true
     uid: 1519
-    active: True
+    active: False
 
   - username: user_14
     use_sudo: true

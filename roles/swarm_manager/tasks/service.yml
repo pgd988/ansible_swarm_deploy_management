@@ -1,7 +1,7 @@
 ---
 
 - name: Install required Docker packets on CentOS
-  package: pkg={{ item }} state=installed
+  package: pkg={{ item }} state=present
   with_items:
     - yum-utils
     - device-mapper-persistent-data
@@ -11,14 +11,14 @@
   when: ansible_distribution == "CentOS"
 
 - name: Install required Docker packets on Ubuntu
-  package: pkg={{ item }} state=installed
+  package: pkg={{ item }} state=present
   with_items:
     - apt-transport-https
     - ca-certificates
     - curl
     - software-properties-common
     - python-setuptools
-    - pip
+    - python-pip
   when: ansible_distribution == "Ubuntu"
 
 - name: Install docker-py
@@ -48,7 +48,7 @@
     update_cache: yes
   when: ansible_distribution == "Ubuntu"
 
-name: Install docker-ce daemon
-  package: pkg=docker-ce state=installed
+- name: Install docker-ce daemon
+  package: pkg=docker-ce state=present
   become: true
   enabled: yes

@@ -1,9 +1,7 @@
 ---
-- hosts: 
+- hosts:
   - linux_servers
   become: true
   user: ubuntu
   roles:
-#   - default
    - swarm_manager
-

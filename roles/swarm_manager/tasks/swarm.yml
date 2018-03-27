@@ -1,19 +1,52 @@
 ---
+#### Prepearing to joining
+- name: determine swarm status
+  shell: docker info 2>&1 | grep Swarm | cut -d ' ' -f2
+  register: swarm_status
 
-- name: Docker swarm leaving
-  become: true
-  command: docker swarm leave -f 
-  ignore_errors: yes
+- name: Create swarm_managers group
+  add_host:
+   hostname: "{{ item }}"
+   groups: swarm_managers
+  with_items: "{{ play_hosts }}"
+  when: "'active' in swarm_status.stdout_lines"
+  run_once: true
+
+- name: Create new_swarm_hosts
+  add_host:
+   hostname: "{{ item }}"
+   groups: new_swarm_hosts
+  with_items: "{{ play_hosts }}" 
+  when: "'active' not in swarm_status.stdout_lines"
+  run_once: true
 
 - name: Swarm cluster Init
-  become: yes
   command: docker swarm init --advertise-addr={{ swarm_iface | default ('eth0') }}:2377
-  register: init_first_node
+  with_items: swarm_managers[0]
+  when: "'swarm_managers' not in groups"
+  register: swarm_first_node
 
-- name: join nodes to manager
-  command: docker swarm join --token={{ tokennode }} {{ hostmanager }}
-  become: yes
-  register: swarm_join_result
-  failed_when: not "'This node is already part of a swarm' in command_result.stderr"
+- name: retrieve swarm manager token
+  shell: docker swarm join-token -q manager
+  with_items: swarm_managers[0]
+  register: swarm_manager_token
 
-  
+- name: Send host in to swarm_managers
+  add_host:
+    hostname: "{{ play_hosts[0] }}"
+    groups: swarm_managers
+  when: swarm_first_node is changed
+
+
+- name: DEBUG
+  vars:
+    token: "{{ swarm_manager_token.stdout_lines }}"
+  debug:
+    msg: "token is: {{ token }}"
+
+#- name: Join manager nodes
+#  vars:
+#    token: "{{ swarm_manager_token.stdout}}"
+#
+#  shell: docker swarm join --advertise-addr={{ swarm_iface | default('eth0') }}:2377 --token={{ token }} {{ groups['swarm_managers'][0] }}:2377
+
