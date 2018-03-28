@@ -1,5 +1,5 @@
 ---
 
-#tokennode: "{{ hostvars.manager.init_first_node.stdout.split('\n')[5].split(' ')[5] }}"
+tokennode: "{{ swarm_manager_token.split('\n')[5].split(' ')[5] }}"
 #hostmanager: "{{ hostvars.manager.init_first_node.stdout.split('\n')[6] }}"
 

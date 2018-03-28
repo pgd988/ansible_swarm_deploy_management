@@ -4,6 +4,13 @@
   shell: docker info 2>&1 | grep Swarm | cut -d ' ' -f2
   register: swarm_status
 
+#- name: DEBUG-99
+#  vars:
+#    stt: "{{ swarm_status }}"
+#  debug:
+#    msg: "swarm_status is: {{ stt }} "
+
+
 - name: Create swarm_managers group
   add_host:
    hostname: "{{ item }}"
@@ -20,6 +27,12 @@
   when: "'active' not in swarm_status.stdout_lines"
   run_once: true
 
+#- name: DEBUG-0
+#  vars:#
+#    mng: "{{ groups.swarm_managers.0 }}"
+#  debug:
+#    msg: "swarm_managers_t is: {{ mng }} "
+
 - name: Swarm cluster Init
   command: docker swarm init --advertise-addr={{ swarm_iface | default ('eth0') }}:2377
   with_items: swarm_managers[0]
@@ -28,7 +41,7 @@
 
 - name: retrieve swarm manager token
   shell: docker swarm join-token -q manager
-  with_items: swarm_managers[0]
+  when: inventory_hostname in groups.swarm_managers.0
   register: swarm_manager_token
 
 - name: Send host in to swarm_managers
@@ -40,13 +53,18 @@
 
 - name: DEBUG
   vars:
-    token: "{{ swarm_manager_token.stdout_lines }}"
+    token: "{{ swarm_manager_token.stdout }}"
   debug:
     msg: "token is: {{ token }}"
+  when: inventory_hostname in groups.swarm_managers.0
 
-#- name: Join manager nodes
-#  vars:
-#    token: "{{ swarm_manager_token.stdout}}"
-#
-#  shell: docker swarm join --advertise-addr={{ swarm_iface | default('eth0') }}:2377 --token={{ token }} {{ groups['swarm_managers'][0] }}:2377
+
+- name: Join manager nodes
+  vars:
+    token: "{{ hostvars.swarm_manager_token.stdout }}"
+
+  shell: docker swarm join --advertise-addr={{ swarm_iface | default('eth0') }}:2377 --token={{ token }} {{ groups.swarm_managers.0 }}:2377
+  when: 
+    - new_swarm_hosts is defined
+    - inventory_hostname in new_swarm_hosts
 
