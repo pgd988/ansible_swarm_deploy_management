@@ -4,6 +4,6 @@
   become: true
   user: ubuntu
   roles:
-#   - default
+   - default
    - swarm_manager
 

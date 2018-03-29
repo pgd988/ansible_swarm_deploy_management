@@ -1,7 +1,4 @@
 ---
-
-#- include_vars: roles/default/vars/main.yaml
-
 - name: Sudo install
   package: pkg=sudo state=installed
 

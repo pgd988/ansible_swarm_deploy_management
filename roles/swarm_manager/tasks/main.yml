@@ -1,6 +1,6 @@
 ---
-#- name: Default service installation
-#  include: service.yml
+- name: Default service installation
+  include: service.yml
 
 - name: Swarm init
   include: swarm.yml  
