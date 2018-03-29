@@ -14,7 +14,7 @@ protocol = tcp
 # interpolation to the chosen action shortcut (e.g. action_mw, action_mwl, etc) in jail.local
 # globally (section [DEFAULT]) or per specific section
 
-banaction = %(action_)s
+#banaction = %(action_)s
 
 [sshd]
 
@@ -23,7 +23,6 @@ port    = ssh
 filter  = sshd
 logpath = /var/log/secure
 maxretry = 6
-banaction = iptables-multiport
 action = iptables-multiport
 
 
