@@ -1,7 +1,12 @@
 ---
-
 - include_vars: roles/LB/vars/backends.yaml
-- include_vars: roles/LB/vars/root_pass.yml
+#- include_vars: roles/LB/vars/root_pass.yml
+
+#- name: Firewalld disable
+#  service: name=firewalld state=absent
+
+- name: IPtables install
+  package: pkg=iptables state=present
 
 - name: Iptables config deploy
   copy: src=iptables/iptables.rules dest=/etc/iptables.rules

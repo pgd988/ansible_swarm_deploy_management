@@ -1,6 +1,6 @@
 ---
 - hosts:
-  - lb
+  - linux_servers
   become: true
   user: ubuntu
   roles:

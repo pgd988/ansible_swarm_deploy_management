@@ -1,7 +1,7 @@
 haproxy_backends:
   - name: webservers
     disabled: false
-    description: Joomla App Backends
+    description: Backends
     balance: roundrobin
     server:
       - name: web1

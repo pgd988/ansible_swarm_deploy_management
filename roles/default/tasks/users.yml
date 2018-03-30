@@ -1,7 +1,6 @@
 ---
 - include_vars: roles/default/vars/users_list.yaml
 
-
 #- name: DEBUG 
 #  debug:
 #    msg: "Root Pwd is: {{ root_pass }} and Random Pwd is: {{ random_pass }}"

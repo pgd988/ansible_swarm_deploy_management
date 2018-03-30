@@ -1,79 +1,61 @@
 ---
-### Leaving the cluster for tests
-
-- name: Leave cluster
-  shell: docker swarm leave -f
-  ignore_errors: true
-
+### Leaving the cluster for tests or for FLUSHING WHOLE CLUSTER!!!! BEWARE to enable it !!!
+#
+#- name: Leave cluster
+#  shell: docker swarm leave -f
+#  ignore_errors: true
+#
 #### Prepearing to joining
 - name: determine swarm status
   shell: docker info 2>&1 | grep Swarm | cut -d ' ' -f2
   register: swarm_status
 
-#- name: DEBUG-99
-#  vars:
-#    stt: "{{ swarm_status }}"
-#  debug:
-#    msg: "swarm_status is: {{ stt }} "
+- name: Set fact NOT IN SWARM state
+  set_fact:
+    not_in_swarm: True
+  when: "'active' not in swarm_status.stdout_lines"
 
-
-- name: Create swarm_managers group
-  add_host:
-   hostname: "{{ item }}"
-   groups: swarm_managers
-  with_items: "{{ ansible_play_batch }}"
+- name: Set fact IN SWARM state
+  set_fact: 
+    in_swarm: True
   when: "'active' in swarm_status.stdout_lines"
-  run_once: true
 
 - name: Create new_swarm_hosts group
-  add_host:
-   hostname: "{{ item }}"
-   groups: new_swarm_hosts
-  with_items: "{{ ansible_play_batch }}" 
-  when: "'inactive' in swarm_status.stdout_lines"
-  run_once: true
+  group_by:
+    key: new_swarm_hosts_{{ not_in_swarm }}
+  when: "'active' not in swarm_status.stdout_lines"
 
-#- name: DEBUG-0
-#  vars:#
-#    mng: "{{ groups.swarm_managers.0 }}"
-#  debug:
-#    msg: "swarm_managers_t is: {{ mng }} "
+- name: Create swarm_managers group
+  group_by:
+    key: swarm_managers_{{ in_swarm }}
+  when: "'active' in swarm_status.stdout_lines"
+
 
 - name: Swarm cluster Init
-  command: docker swarm init --advertise-addr={{ swarm_iface | default ('eth0') }}:2377
-#  with_items: "{{ ansible_play_batch[0] }}"
+  command: docker swarm init --advertise-addr={{ inventory_hostname }}:2377
   when: 
-    - "'swarm_managers' not in groups"
+    - "'swarm_managers_True' not in groups"
     - inventory_hostname in ansible_play_batch[0]
   register: swarm_first_node
 
 - name: Send host in to swarm_managers
   add_host:
     hostname: "{{ ansible_play_batch[0] }}"
-    groups: swarm_managers
+    groups: swarm_managers_True
   when: swarm_first_node is changed
 
 - name: Retrieve swarm manager token on existed cluster
   shell: docker swarm join-token -q manager
-  when: inventory_hostname in groups.swarm_managers.0
+  when: inventory_hostname in groups.swarm_managers_True.0
   register: swarm_manager_token
 
-#- name: DEBUG
-#  vars:
-#    token: "{{ hostvars.groups.swarm_managers.0.swarm_manager_token.stdout }}"
-#    token: "{{ hostvars[groups['swarm_managers'][0]].swarm_manager_token.stdout }}"
-#  debug:
-#    msg: "token is: {{ token }}"
-#  when: inventory_hostname in groups.new_swarm_hosts.0
-
-
-- name: Join manager nodes no existed cluster
+- name: Joining manager nodes that none existed in cluster
   vars:
-    token: "{{ hostvars[groups['swarm_managers'][0]].swarm_manager_token.stdout }}"
+    token: "{{ hostvars[groups['swarm_managers_True'][0]].swarm_manager_token.stdout }}"
 
-  shell: docker swarm join --advertise-addr={{ swarm_iface | default('eth0') }}:2377 --token={{ token }} {{ groups.swarm_managers.0 }}:2377
+  shell: docker swarm join --advertise-addr={{ inventory_hostname }}:2377 --token={{ token }} {{ groups.swarm_managers_True.0 }}:2377
   when: 
-    - groups.swarm_managers is defined
-    - groups.new_swarm_hosts is defined
-    - inventory_hostname in groups.new_swarm_hosts
-    - inventory_hostname not in groups.swarm_managers.0
+    - groups.swarm_managers_True is defined
+    - groups.new_swarm_hosts_True is defined
+    - inventory_hostname in groups.new_swarm_hosts_True
+    - inventory_hostname not in groups.swarm_managers_True.0
