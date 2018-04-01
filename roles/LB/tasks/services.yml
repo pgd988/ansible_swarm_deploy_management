@@ -1,5 +1,4 @@
 ---
-- include_vars: roles/LB/vars/backends.yaml
 #- include_vars: roles/LB/vars/root_pass.yml
 
 #- name: Firewalld disable
@@ -15,12 +14,31 @@
 - name: HaProxy install
   package: pkg=haproxy state=installed
 
+- name: Remove old templates
+  file:
+    path: roles/LB/vars/b2.yml
+    state: absent
+  delegate_to: localhost
+  ignore_errors: true
+  no_log: True
+
+- name: 'PreBuild backend template'
+  vars:
+    backends: "{{ groups.linux_servers }}"
+  template:
+    src: "b2.cfg"
+    dest: "roles/LB/vars/b2.yml"
+  delegate_to: localhost
+  run_once: true
+
 - name: 'Create directory for custom frontend'
   file:
     path: "/etc/haproxy/backends.d"
     state: directory
 
-- name: Build up the backetnd
+- include_vars: roles/LB/vars/b2.yml
+
+- name: Build up the backend
   template:
     src: "backend.cfg"
     dest: "/etc/haproxy/backends.d/{{ item.name }}.cfg"

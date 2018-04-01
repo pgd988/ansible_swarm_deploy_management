@@ -1,0 +1,24 @@
+haproxy_backends:
+  - name: webservers
+    disabled: false
+    description: Backends
+    balance: roundrobin
+    server:
+
+      - name: 35.156.214.9
+        ip: 35.156.214.9
+        port: 80
+        weight: 10
+        param: check
+      - name: 18.197.191.242
+        ip: 18.197.191.242
+        port: 80
+        weight: 10
+        param: check
+      - name: 18.197.24.22
+        ip: 18.197.24.22
+        port: 80
+        weight: 10
+        param: check
+
+    option: httpchk
