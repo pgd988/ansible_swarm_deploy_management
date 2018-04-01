@@ -6,9 +6,9 @@ clear
 #
 if [ "$?" -eq "0" ]; then
 case $DIALOG in
-   1) DIALOG2=$(dialog --clear --title "Docker Swarm managment" --menu "Select operation" 15 50 7 1 "Add new nodes" 2 "Remove node frome cluster" 2>&1 >/dev/tty)
+   1) DIALOG1=$(dialog --clear --title "Docker Swarm managment" --menu "Select operation" 15 50 7 1 "Add new node" 2 "Remove node frome cluster" 2>&1 >/dev/tty)
 	clear
-	case $DIALOG2 in
+	case $DIALOG1 in
 	    1) 
 	    echo "some case 1"
 	    ping -c 10 ya.ru
@@ -19,11 +19,19 @@ case $DIALOG in
 	    ;;
 	esac
     ;;
-   2) 
-    echo "Start build container..."
+   2) DIALOG2=$(dialog --clear --title "Deploying releases" --menu "Select operation" 15 50 7 1 "Deploy new release" 2 "Rollback release" 2>&1 >/dev/tty)
+	clear
+	case $DIALOG2 in
+	    1)
+    	    echo "Start build container..."
+	    ;;
+	    2)
+	    echo "Rollback release"
+	    ;;
+	esac
     ;;
    3) 
-    echo "Start deploy container to remote cluster"
+    echo "some case"
     ;;
    q|Q) 
     echo "Exiting"
