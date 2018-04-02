@@ -10,12 +10,16 @@ case $DIALOG in
 	clear
 	case $DIALOG1 in
 	    1) 
-	    echo "some case 1"
-	    ping -c 10 ya.ru
+	    DIALOG1_1=$(dialog --clear --title "Docker Swarm managment" --inputbox "Enter New node IP:" 15 50 3>&1 1>&2 2>&3 3>&-)
+	    sed -i "/linux_servers/a $DIALOG1_1" ./inventory
+	    clear
+	    ansible-playbook -i inventory sw.yml
+	    clear
 	    ;;
 	    2) 
-	    echo "some case 2"
-	    ping -c 10 8.8.8.8
+	    DIALOG1_2=$(dialog --clear --title "Docker Swarm managment" --inputbox "Enter node IP to REMOVE from cluster:" 15 50 3>&1 1>&2 2>&3 3>&-)
+	    sed -i "/$DIALOG1_2/d" ./inventory
+	    clear
 	    ;;
 	esac
     ;;

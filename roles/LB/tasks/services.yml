@@ -1,8 +1,9 @@
 ---
 #- include_vars: roles/LB/vars/root_pass.yml
 
-#- name: Firewalld disable
-#  service: name=firewalld state=absent
+- name: Firewalld disable
+  service: name=firewalld state=absent
+  when: ansible_distribution == "CentOS"
 
 - name: IPtables install
   package: pkg=iptables state=present
