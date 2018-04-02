@@ -22,8 +22,9 @@ case $DIALOG in
 	    sed -n '/lb/,/EOB/p' inventory > .inv_lb
 	    if test $(grep -c $DIALOG1_2 .inv_linx) -eq 0; then
 	    clear
-	    echo "IP NOT IN LINUX_SERVERS  LIST"
+	    dialog --title 'Swarm Managment' --msgbox 'IP NOT IN LINUX_SERVERS  LIST' 10 50
 	    rm -rf ./.inv_*;
+	    clear
 	    else
 	    sed -i "/$DIALOG1_2/d" .inv_linx &&
 	    cat .inv_lb > inventory && cat .inv_linx >> inventory
@@ -61,8 +62,9 @@ case $DIALOG in
 	sed -n '/lb/,/EOB/p' inventory > .inv_lb
 	if test $(grep -c $DIALOG3_2 .inv_lb) -eq 0; then
 	clear
-	echo "IP NOT IN LINUX_SERVERS  LIST"
+	dialog --title 'Load Balancer Managment' --msgbox 'IP NOT IN LOAD BALANCERS  LIST' 10 50
 	rm -rf ./.inv_*;
+	clear
 	else
 	sed -i "/$DIALOG3_2/d" .inv_lb
 	cat .inv_lb > inventory && cat .inv_linx >> inventory
