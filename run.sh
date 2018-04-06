@@ -59,10 +59,10 @@ case $DIALOG in
 	clear
 	case $DIALOG2 in
 	    1)
-    	    echo "Start build container..."
+    	    DIALOG2_1=$(dialog --clear --title "Deploying releases" --inputbox "Enter Release TAG:" 15 50 3>&1 1>&2 2>&3 3>&-)
 	    ;;
 	    2)
-	    echo "Rollback release"
+	    DIALOG2_2=$(dialog --clear --title "Deploying releases" --inputbox "Enter Release TAG:" 15 50 3>&1 1>&2 2>&3 3>&-)
 	    ;;
 	esac
     ;;

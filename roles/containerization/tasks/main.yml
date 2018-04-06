@@ -1,1 +1,49 @@
 ---
+
+# ####
+# - name: Get release from REPO
+#   git:
+#   repo: {repo_url}
+#   dest: /roles/containerization/files/releases/{{release_tag}}
+#   version: "{{release_tag}}"
+#   delegate_to: localhost
+#   when: release_tag is defined
+# #### 
+
+- name: Get release
+  command: 'rsync -zvh -e "ssh" root@{{jenkins_server}}:/tmp/{{release_tag}}/* ./roles/containerization/files/releases/{{release_tag}}'
+  delegate_to: localhost
+
+######
+
+- name: Remove old Dockerfile
+  file:
+    path: roles/containerization/files/Dockerfile
+    state: absent
+  delegate_to: localhost
+  no_log: True
+  run_once: True
+
+- name: Build DockerFile
+  template:
+    src: "Dockerfile.cfg"
+    dest: "roles/containerization/files/Dockerfile"
+#  delegate_to: localhost
+  run_once: True
+
+- name: Log into DockerHub
+  docker_login:
+    username: pgd988
+    password: 
+    email: pgd988@gmail.com
+
+- name: Build Container
+  docker_image:
+    path: roles/containerization/files/
+    name: '{{registry_url}}/{{project_name}}'
+#    name: '{{project_name}}'
+    tag: "{{release_tag}}"
+    push: yes
+  delegate_to: localhost
+
+#- name: SWARM service Create\Update
