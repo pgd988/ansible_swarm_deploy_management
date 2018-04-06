@@ -26,11 +26,14 @@ case $DIALOG in
 		    ;;
 		esac
 	    ;;
-	    2) 
-	    dialog --clear --title "EDIT: LB=Load Balancers Linux_servers=Swarm Nodes" --editbox ./inventory 17 50 2>.inventory.tmp
+	    2)
+	    if ! dialog --clear --title "EDIT: LB=Load Balancers Linux_servers=Swarm Nodes" --editbox ./inventory 17 50 2>.inventory.tmp; then
 	    clear
+	    rm -rf ./.*.tmp
+	    else
 	    cat .inventory.tmp > inventory
 	    rm -rf ./.*.tmp
+	    fi
 	    clear
 	    ;;
 	    3) DIALOG1_3_1=$(dialog --clear --title "Load Balancers Managment" --menu "Select operation" 15 50 7 1 "Deploy config" 2 "Check config" 2>&1 >/dev/tty)
