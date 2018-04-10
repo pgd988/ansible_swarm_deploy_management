@@ -5,5 +5,7 @@ release_tag: master
 jenkins_server: localhost
 project_name: test_web
 registry_url: pgd988
+reprl_def_count: 5
+
 
 

@@ -1,6 +1,6 @@
 #/bin/bash
 
-DIALOG=$(dialog --title "Cluster Managment" --clear --menu "Select operation" 15 50 7  1 "Configure Nodes Roles" 2 "Deploy new app release" Q "quit" 2>&1 >/dev/tty)
+DIALOG=$(dialog --title "Cluster Managment" --clear --menu "Select operation" 15 50 7  1 "Configure Nodes Roles" 2 "Releases Management" Q "quit" 2>&1 >/dev/tty)
 
 clear
 #
@@ -55,7 +55,7 @@ case $DIALOG in
 	    ;;
 	esac
     ;;
-    2) DIALOG2=$(dialog --clear --title "Deploying releases" --menu "Select operation" 15 50 7 1 "Deploy new release" 2 "Rollback release" 2>&1 >/dev/tty)
+    2) DIALOG2=$(dialog --clear --title "Releases Management" --menu "Select operation" 15 50 7 1 "Deploy new release" 2 "Rollback release" 3 "Check service status" 2>&1 >/dev/tty)
 	clear
 	case $DIALOG2 in
 	    1)
@@ -63,6 +63,9 @@ case $DIALOG in
 	    ;;
 	    2)
 	    DIALOG2_2=$(dialog --clear --title "Deploying releases" --inputbox "Enter Release TAG:" 15 50 3>&1 1>&2 2>&3 3>&-)
+	    ;;
+	    3)
+	    ./tools/get_service_status.sh
 	    ;;
 	esac
     ;;

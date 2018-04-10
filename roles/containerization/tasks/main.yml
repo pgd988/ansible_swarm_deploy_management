@@ -47,3 +47,27 @@
   delegate_to: localhost
 
 #- name: SWARM service Create\Update
+
+# Deploy service
+
+- name: "Service Check is created"
+  shell: docker service ls --filter name={{ project_name }} | grep '\s{{ project_name }}\s' | awk '{ print $1 }'
+  register: service_exists
+  changed_when: false
+
+- name: "Service {{ project_name }} is running?"
+  shell: docker service ls --filter name={{ project_name}} | grep '\s{{ project_name }}\s' | awk '{ printf $3 }' | sed 's/\([0-9]\)\+.*/\1/'
+  register: running_replicas
+  when: service_exists.stdout != "" 
+  changed_when: false
+
+- fail: msg="The service {{ project_name }} is down"
+  when: running_replicas is defined and running_replicas.stdout == "0"
+
+ - name: "Create service {{  project_name }}"
+   shell: "docker service create --name {{ project_name }} {{registry_url}}/{{project_name}}:{{release_tag}} --replicas {{ reprl_def_count }} --publish published=8080,target=80 --update-failure-action=rollback --rollback-parallelism=2 --rollback-monitor=20s --rollback-max-failure-ratio= 2"
+   when: service_exists.stdout == "" 
+
+- name: "Service Update"
+  shell: "docker service update {{ project_name }} --image {{registry_url}}/{{project_name}}:{{release_tag}}"
+  when: service_exists.stdout != ""
