@@ -13,7 +13,7 @@
 - name: Get release
   command: 'rsync -zvh -e "ssh" root@{{jenkins_server}}:/tmp/{{release_tag}}/* ./roles/containerization/files/releases/{{release_tag}}'
   delegate_to: localhost
-
+  ignore_errors: True
 ######
 
 - name: Remove old Dockerfile
@@ -28,7 +28,7 @@
   template:
     src: "Dockerfile.cfg"
     dest: "roles/containerization/files/Dockerfile"
-#  delegate_to: localhost
+  delegate_to: localhost
   run_once: True
 
 - name: Log into DockerHub
@@ -55,19 +55,23 @@
   register: service_exists
   changed_when: false
 
-- name: "Service {{ project_name }} is running?"
+- name: Service "{{ project_name }}"" is running?
   shell: docker service ls --filter name={{ project_name}} | grep '\s{{ project_name }}\s' | awk '{ printf $3 }' | sed 's/\([0-9]\)\+.*/\1/'
   register: running_replicas
-  when: service_exists.stdout != "" 
+  when: service_exists.stdout != '' 
   changed_when: false
 
-- fail: msg="The service {{ project_name }} is down"
-  when: running_replicas is defined and running_replicas.stdout == "0"
+- name: DEBUG
+  debug:
+    msg: "{{running_replicas}} "
 
- - name: "Create service {{  project_name }}"
-   shell: "docker service create --name {{ project_name }} {{registry_url}}/{{project_name}}:{{release_tag}} --replicas {{ reprl_def_count }}  --publish published={{service_port_published}},target={{service_port_target}} --update-failure-action=rollback --rollback-parallelism={{rollback-parallelism}} --rollback-monitor={{rollback-monitor}} --rollback-max-failure-ratio={{rollback-max-failure-ratio}}"
-   when: service_exists.stdout == "" 
+- fail: msg="The service "{{ project_name }}" is down"
+  when: running_replicas is defined and running_replicas.stdout is defined and running_replicas.stdout == "0"
+
+- name: Create service "{{ project_name }}"
+  shell: "docker service create --name {{ project_name }} {{registry_url}}/{{project_name}}:{{release_tag}} --replicas {{ reprl_def_count }} --publish published={{service_port_published}},target={{service_port_target}} --update-failure-action=rollback --rollback-parallelism={{rollback-parallelism}} --rollback-monitor={{rollback-monitor}} --rollback-max-failure-ratio={{rollback-max-failure-ratio}}"
+  when: service_exists.stdout == '' 
 
 - name: "Service Update"
   shell: "docker service update {{ project_name }} --image {{registry_url}}/{{project_name}}:{{release_tag}}"
-  when: service_exists.stdout != ""
+  when: service_exists.stdout != ''

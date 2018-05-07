@@ -1,7 +1,7 @@
 ---
 - hosts:
-  - localhost
+  - linux_servers
   become: true
-  user: root
+  user: ubuntu
   roles:
    - containerization

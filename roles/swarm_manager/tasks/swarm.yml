@@ -20,6 +20,24 @@
     in_swarm: True
   when: "'active' in swarm_status.stdout_lines"
 
+- name: Set fact SWARM PENDING state
+  set_fact:
+    not_in_swarm: True
+  when: "'pending' in swarm_status.stdout_lines"
+
+- name: Set fact SWARM ERROR state
+  set_fact:
+    not_in_swarm: True
+  when: "'error' in swarm_status.stdout_lines"
+
+- name: Leave SWARM cluster for PENDING status nodes
+  shell: docker swarm leave -f
+  when: "'pending' in swarm_status.stdout_lines"
+
+- name: Leave SWARM cluster from ERROR status nodes
+  shell: docker swarm leave -f
+  when: "'error' in swarm_status.stdout_lines"
+
 - name: Create new_swarm_hosts group
   group_by:
     key: new_swarm_hosts_{{ not_in_swarm }}

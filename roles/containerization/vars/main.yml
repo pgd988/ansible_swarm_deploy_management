@@ -10,7 +10,7 @@ registry_url: pgd988
 
 ### SWARM service param:
 service_port_published: 8080
-service+port_target: 80
+service_port_target: 80
 reprl_def_count: 5
 rollback-parallelism: 2
 rollback-monitor: 20s
