@@ -12,7 +12,7 @@ registry_url: pgd988
 service_port_published: 8080
 service_port_target: 80
 reprl_def_count: 5
-rollback-parallelism: 2
-rollback-monitor: 20s
-rollback-max-failure-ratio: 2
+rollback_parallelism: 2
+rollback_monitor: 20s
+rollback_max_failure_ratio: 2
 ########################

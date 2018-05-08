@@ -1,3 +1,9 @@
+#####
+Requirements:
+
+dialog console utility (yum|apt-get install dialog)
+
+#####
 Run it for TEST from .  directory
 
 ansible-playbook --check [role].yml -i inventory --vault-password-file roles/LB/vars/vault_pass
@@ -16,6 +22,7 @@ LB - Load balancer installation with HAproxy
 
 swarm_manages - Doker swarm manager role
 
+containerization - Deploy and Update swarm service 
 
 ##################
 files/ - static configs
