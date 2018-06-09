@@ -10,53 +10,64 @@
 #   when: release_tag is defined
 # #### 
 
-- name: Get release
-  command: 'rsync -zvh -e "ssh" root@{{jenkins_server}}:/tmp/{{release_tag}}/* ./roles/containerization/files/releases/{{release_tag}}'
-  delegate_to: localhost
-  ignore_errors: True
+#- name: Get release
+#  command: 'rsync -zvh -e "ssh" root@{{jenkins_server}}:/tmp/{{release_tag}}/* ./roles/containerization/files/releases/{{release_tag}}'
+#  delegate_to: localhost
+#  ignore_errors: True
+
 ######
 
-- name: Remove old Dockerfile
-  file:
-    path: roles/containerization/files/Dockerfile
-    state: absent
-  delegate_to: localhost
-  no_log: True
+# - name: Remove old Dockerfile
+#   file:
+#     path: roles/containerization/files/Dockerfile
+#     state: absent
+#   delegate_to: localhost
+#   no_log: True
+#   run_once: True
+
+# - name: Build DockerFile
+#   template:
+#     src: "Dockerfile.cfg"
+#     dest: "roles/containerization/files/Dockerfile"
+#   delegate_to: localhost
+#   run_once: True
+
+# - name: Login into DockerHub on Localhost
+#   docker_login:
+#     username: "{{ docker_hub_user }}"
+#     password: "{{ docker_hub_pass }}"
+#     email: pgd988@gmail.com
+#   run_once: yes
+#   delegate_to: localhost
+
+# - name: Login into DockerHub
+#   docker_login:
+#     username: "{{ docker_hub_user }}"
+#     password: "{{ docker_hub_pass }}"
+#     email: pgd988@gmail.com
+
+# - name: Build Container
+#   docker_image:
+#     path: roles/containerization/files/
+#     name: '{{ registry_url }}/{{ project_name }}'
+#     tag: "{{ release_tag }}"
+#     push: yes
+#   run_once: yes
+#   delegate_to: localhost
+
+- name: Set update execution host
+  add_host:
+    hostname: "{{ ansible_play_batch[0] }}"
+    groups: swarm_executors
   run_once: True
 
-- name: Build DockerFile
-  template:
-    src: "Dockerfile.cfg"
-    dest: "roles/containerization/files/Dockerfile"
-  delegate_to: localhost
-  run_once: True
-
-- name: Log into DockerHub
-  docker_login:
-    username: pgd988
-    password: 
-    email: pgd988@gmail.com
-
-- name: Build Container
-  docker_image:
-    path: roles/containerization/files/
-    name: '{{registry_url}}/{{project_name}}'
-#    name: '{{project_name}}'
-    tag: "{{release_tag}}"
-    push: yes
-  delegate_to: localhost
-
-#- name: SWARM service Create\Update
-
-# Deploy service
-
-- name: "Service Check is created"
+- name: "Check Service existance"
   shell: docker service ls --filter name={{ project_name }} | grep '\s{{ project_name }}\s' | awk '{ print $1 }'
   register: service_exists
   changed_when: false
 
 - name: Service "{{ project_name }}"" is running?
-  shell: docker service ls --filter name={{ project_name}} | grep '\s{{ project_name }}\s' | awk '{ printf $3 }' | sed 's/\([0-9]\)\+.*/\1/'
+  shell: docker service ls --filter name={{ project_name}} | grep '\s{{ project_name }}\s' | awk '{ printf $4 }' | sed 's/\/[0-9]//'
   register: running_replicas
   when: service_exists.stdout != '' 
   changed_when: false
@@ -69,9 +80,10 @@
   when: running_replicas is defined and running_replicas.stdout is defined and running_replicas.stdout == "0"
 
 - name: Create service "{{ project_name }}"
-  shell: docker service create --name {{ project_name }} {{ registry_url }}/{{ project_name }}:{{ release_tag }} --replicas {{ reprl_def_count }} --publish published={{ service_port_published }},target={{ service_port_target }} --update-failure-action=rollback --rollback-parallelism={{ rollback_parallelism }} --rollback-monitor={{ rollback_monitor }} --rollback-max-failure-ratio={{ rollback_max_failure_ratio }}
-  when: service_exists.stdout == '' 
+  shell: docker service create --name {{ project_name }} --replicas {{ reprl_def_count }} --publish published={{ service_port_published }},target={{ service_port_target }} --update-failure-action=rollback --rollback-parallelism={{ rollback_parallelism }} --rollback-monitor={{ rollback_monitor }} --rollback-max-failure-ratio={{ rollback_max_failure_ratio }} {{ registry_url }}/{{ project_name }}:{{ release_tag }}
+  when: service_exists.stdout == '' and inventory_hostname in groups.swarm_executors.0
 
 - name: "Service Update"
   shell: docker service update {{ project_name }} --image {{ registry_url }}/{{ project_name }}:{{ release_tag }}
-  when: service_exists.stdout != ''
+  when: service_exists.stdout != '' and inventory_hostname in groups.swarm_executors.0
+

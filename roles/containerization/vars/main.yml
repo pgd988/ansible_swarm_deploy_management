@@ -1,17 +1,19 @@
 ---
 
 repo_url: https://github.com/roylines/docker-nginx
-release_tag: master
+release_tag: latest
 
 jenkins_server: localhost
 
-project_name: test_web
-registry_url: pgd988
+project_name: swarm-viz
+registry_url: gsengun
+docker_hub_user: pgd988
+docker_hub_pass:
 
 ### SWARM service param:
 service_port_published: 8080
 service_port_target: 80
-reprl_def_count: 5
+reprl_def_count: 3
 rollback_parallelism: 2
 rollback_monitor: 20s
 rollback_max_failure_ratio: 2

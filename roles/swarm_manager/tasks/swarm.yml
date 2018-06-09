@@ -48,7 +48,6 @@
     key: swarm_managers_{{ in_swarm }}
   when: "'active' in swarm_status.stdout_lines"
 
-
 - name: Swarm cluster Init
   command: docker swarm init --advertise-addr={{ inventory_hostname }}:2377
   when: 
