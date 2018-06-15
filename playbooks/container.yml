@@ -4,6 +4,4 @@
   become: true
   user: ubuntu
   roles:
-   - default
-   - swarm_manager
-   - containerization
+   - ../roles/containerization

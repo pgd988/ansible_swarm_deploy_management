@@ -4,4 +4,4 @@
   become: true
   user: ubuntu
   roles:
-   - LB
+   - ../roles/LB

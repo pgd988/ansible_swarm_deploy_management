@@ -4,5 +4,5 @@
   become: true
   user: ubuntu
   roles:
-   - default
+   - ../roles/default
 

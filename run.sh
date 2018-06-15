@@ -15,13 +15,13 @@ case $DIALOG in
 		    1)
 		    dialog --title --clear "Deploy new Swarm Custer configuration" --msgbox 'Press Enter for Swarm Custer configuration Deploing' 10 50
 		    clear
-		    ansible-playbook -i inventory sw.yml
+		    ansible-playbook -i inventory ./playbooks/sw.yml
 		    clear
 		    ;;
 		    2)
 		    dialog --title --clear "Deploy new Swarm Custer configuration" --msgbox 'Press Enter for Swarm Custer configuration Check' 10 50
 		    clear
-		    ansible-playbook -i inventory --check sw.yml
+		    ansible-playbook -i inventory --check ./playbooks/sw.yml
 		    clear
 		    ;;
 		esac
@@ -42,13 +42,13 @@ case $DIALOG in
 		    1)
 		    dialog --title --clear "Deploy new Load Balancers configuration" --msgbox 'Press Enter for Load Balancers configuration Deploing' 10 50
 		    clear
-		    ansible-playbook -i inventory LB.yml
+		    ansible-playbook -i inventory ./playbooks/LB.yml
 		    clear
 		    ;;
 		    2)
 		    dialog --title --clear "Deploy new Load Balancers configuration" --msgbox 'Press Enter for Load Balancers configuration Check' 10 50
 		    clear
-		    ansible-playbook -i inventory --check LB.yml
+		    ansible-playbook -i inventory --check ./playbooks/LB.yml
 		    clear
 		    ;;
 		esac
@@ -60,9 +60,21 @@ case $DIALOG in
 	case $DIALOG2 in
 	    1)
     	    DIALOG2_1=$(dialog --clear --title "Deploying releases" --inputbox "Enter Release TAG:" 15 50 3>&1 1>&2 2>&3 3>&-)
+	    sed -e "s/^release_tag:.*/release_tag: $DIALOG2_1/" -i ./roles/containerization/vars/main.yml
+            sed -e "s/^is_deploy:.*/is_deploy: true/" -i ./roles/containerization/vars/main.yml
+	    sed -e "s/^is_rollback:.*/is_rollback: false/" -i ./roles/containerization/vars/main.yml
+	    ansible-playbook -i inventory --check ./playbooks/container.yml
+	    clear
 	    ;;
 	    2)
-	    DIALOG2_2=$(dialog --clear --title "Deploying releases" --inputbox "Enter Release TAG:" 15 50 3>&1 1>&2 2>&3 3>&-)
+	    DIALOG2_2=$(dialog --clear --title "Rollback releases" --inputbox "Enter Release TAG:" 15 50 3>&1 1>&2 2>&3 3>&-)
+	    sed -e "s/^release_tag:.*/release_tag: $DIALOG2_2/" -i ./roles/containerization/vars/main.yml
+            sed -e "s/^is_deploy:.*/is_deploy: false/" -i ./roles/containerization/vars/main.yml
+	    sed -e "s/^is_rollback:.*/is_rollback: true/" -i ./roles/containerization/vars/main.yml
+	    ansible-playbook -i inventory --check ./playbooks/container.yml
+            sed -e "s/^is_deploy:.*/is_deploy: true/" -i ./roles/containerization/vars/main.yml
+	    sed -e "s/^is_rollback:.*/is_rollback: false/" -i ./roles/containerization/vars/main.yml
+	    clear
 	    ;;
 	    3)
 	    ./tools/get_service_status.sh
