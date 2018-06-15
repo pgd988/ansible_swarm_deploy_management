@@ -72,9 +72,9 @@
   when: service_exists.stdout != '' 
   changed_when: false
 
-- name: DEBUG
-  debug:
-    msg: "{{running_replicas}} "
+#- name: DEBUG
+#  debug:
+#    msg: "{{running_replicas}} "
 
 - fail: msg="The service "{{ project_name }}" is down"
   when: running_replicas is defined and running_replicas.stdout is defined and running_replicas.stdout == "0"
