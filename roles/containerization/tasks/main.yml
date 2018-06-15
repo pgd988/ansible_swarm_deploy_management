@@ -78,6 +78,7 @@
 
 - fail: msg="The service "{{ project_name }}" is down"
   when: running_replicas is defined and running_replicas.stdout is defined and running_replicas.stdout == "0"
+  ignore_errors: True
 
 - name: Create service "{{ project_name }}"
   shell: docker service create --name {{ project_name }} --replicas {{ reprl_def_count }} --publish published={{ service_port_published }},target={{ service_port_target }} --update-failure-action=rollback --rollback-parallelism={{ rollback_parallelism }} --rollback-monitor={{ rollback_monitor }} --rollback-max-failure-ratio={{ rollback_max_failure_ratio }} {{ registry_url }}/{{ project_name }}:{{ release_tag }}
