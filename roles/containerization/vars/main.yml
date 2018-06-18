@@ -10,8 +10,8 @@ jenkins_server: localhost
 
 project_name: swarm-viz
 registry_url: gsengun
-docker_hub_user: pgd988
-docker_hub_pass:
+registry_pass: pgd988
+registry_pass:
 
 ### Deploying param:
 

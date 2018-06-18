@@ -40,12 +40,6 @@
 #   run_once: yes
 #   delegate_to: localhost
 
-# - name: Login into DockerHub
-#   docker_login:
-#     username: "{{ docker_hub_user }}"
-#     password: "{{ docker_hub_pass }}"
-#     email: pgd988@gmail.com
-
 # - name: Build Container
 #   docker_image:
 #     path: roles/containerization/files/
@@ -54,6 +48,19 @@
 #     push: yes
 #   run_once: yes
 #   delegate_to: localhost
+
+
+- name: Login into DockerHub
+  docker_login:
+    username: "{{ registry_user }}"
+    password: "{{ registry_pass }}"
+
+# - name: Log into private registry and force re-authorization
+#   docker_login:
+#     registry: "{{ registry_url }}"
+#     username: "{{ registry_user }}"
+#     password: "{{ registry_pass }}"
+#     reauthorize: yes
 
 - name: Set update execution host
   add_host:
@@ -80,11 +87,23 @@
   when: running_replicas is defined and running_replicas.stdout is defined and running_replicas.stdout == "0"
   ignore_errors: True
 
+- name: Get current release tag
+  shell: docker ps | grep "{{ project_name }}" | awk '{print$2}' | sed -e 's/.*\://' | head -n 1
+  register: saved_prev_tag
+  when: is_deploy
+
+- name: Pull "{{ registry_url }}"/"{{ project_name }}" image from registry
+  docker_image:
+    name: "{{ registry_url }}"/"{{ project_name }}"
+    tag: "{{ release_tag }}"
+  when: is_deploy and release_tag != prev_tag.stdout
+
+
 - name: Create service "{{ project_name }}"
   shell: docker service create --name {{ project_name }} --replicas {{ reprl_def_count }} --publish published={{ service_port_published }},target={{ service_port_target }} --update-failure-action=rollback --rollback-parallelism={{ rollback_parallelism }} --rollback-monitor={{ rollback_monitor }} --rollback-max-failure-ratio={{ rollback_max_failure_ratio }} {{ registry_url }}/{{ project_name }}:{{ release_tag }}
-  when: service_exists.stdout == '' and inventory_hostname in groups.swarm_executors.0
+  when: service_exists.stdout == '' and inventory_hostname in groups.swarm_executors.0 and release_tag != prev_tag.stdout
 
 - name: "Service Update"
   shell: docker service update {{ project_name }} --image {{ registry_url }}/{{ project_name }}:{{ release_tag }}
-  when: service_exists.stdout != '' and inventory_hostname in groups.swarm_executors.0
+  when: service_exists.stdout != '' and inventory_hostname in groups.swarm_executors.0 and release_tag != prev_tag.stdout
 
