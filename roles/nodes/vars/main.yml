@@ -1,1 +1,10 @@
- 
+
+group_name: SW
+instance_type:t2.micro
+image:
+instance_count:1
+ec2_key:
+vpc_subnet: default
+is_up: true
+is_terminate: false
+
